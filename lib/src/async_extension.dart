@@ -46,6 +46,27 @@ extension FutureResultExtension<T> on FutureResult<T> {
     }
   }
 
+  Future<R> fold<R>(
+    FutureOr<R> Function(T) onValue, {
+    required FutureOr<R> Function(ErrorOrExeption) onError,
+  }) async {
+    final result = await this;
+    switch (result) {
+      case ResultSuccess<T>():
+        try {
+          return onValue(result.value);
+        } on Exception catch (e) {
+          return onError(e);
+        } on Error catch (e) {
+          return onError(e);
+        } catch (e) {
+          return onError(ResultUnknownErrorException(e));
+        }
+      case ResultFailure<T>():
+        return onError(result.error);
+    }
+  }
+
   Future<T> get() async {
     final result = await this;
     return switch (result) {

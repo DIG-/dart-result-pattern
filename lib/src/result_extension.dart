@@ -50,10 +50,20 @@ extension ResultExtension<T> on Result<T> {
     required R Function(ErrorOrExeption) onError,
   }) {
     final result = this;
-    return switch (result) {
-      ResultSuccess<T>() => onValue(result.value),
-      ResultFailure<T>() => onError(result.error),
-    };
+    switch (result) {
+      case ResultSuccess<T>():
+        try {
+          return onValue(result.value);
+        } on Exception catch (e) {
+          return onError(e);
+        } on Error catch (e) {
+          return onError(e);
+        } catch (e) {
+          return onError(ResultUnknownErrorException(e));
+        }
+      case ResultFailure<T>():
+        return onError(result.error);
+    }
   }
 
   T get() {
